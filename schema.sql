@@ -19,11 +19,10 @@ CREATE TABLE department (
 CREATE TABLE role (
   id int AUTO_INCREMENT NOT NULL,
   title varchar(30) NOT NULL,
-  salary DECIMAL(5,2),
+  salary DECIMAL,
   department_id INT(30),
   PRIMARY KEY(id)
 );
-
 
 -- Created the table "employee"
 CREATE TABLE employee (
@@ -34,3 +33,15 @@ CREATE TABLE employee (
   manager_id INT(30),
   PRIMARY KEY(id)
 );
+
+SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id, role.title, role.salary, role.department_id, 
+FROM employee
+INNER JOIN role ON employee.role_id = role.title;
+
+SELECT role.salary, role.title, 
+FROM role
+INNER JOIN department ON role.department_id = department.id ;
+
+SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, employee.manager_id, department.department
+FROM employee, role, department
+WHERE employee.role_id = role.title and role.department_id = department.id;
