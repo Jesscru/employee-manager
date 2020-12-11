@@ -47,9 +47,9 @@ function startPrompt(){
     ]).then(data => {
         console.log(data.start);
         if (data.start === "View All Employees") {
-            queryAllEmployees();
-        } else if (data.start === "Update Existing employee") { 
-            updateEmployee();
+            viewAllEmployees();
+        // } else if (data.start === "Update Existing employee") { 
+        //   updateEmployee();
         // } else if (data.start === "View Employees by Department") { 
         //     makePost();
         // } else if (data.start === "View Employees by Manager") { 
@@ -58,8 +58,8 @@ function startPrompt(){
             createEmployee();
         } else if (data.start === "Remove an Employee") { 
             removeEmployee();
-        // } else if (data.start === "Update An Employee Role") { 
-        //     updateEmployee();
+        } else if (data.start === "Update An Employee Role") { 
+            updateEmployeeRole();
         // } else if ("Update a Manager") {
         //     buildTeam();
         } else {
@@ -70,8 +70,12 @@ function startPrompt(){
 }
 
 // list all the employees
-function queryAllEmployees() {
-    connection.query("SELECT * FROM employee", function(err, res) {
+function viewAllEmployees() {
+  let query = 'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, employee.manager_id, department.department'
+  query += ' FROM employee, role, department'
+  query += ' WHERE employee.role_id = role.title AND role.department_id = department.id';
+  
+    connection.query(query, function(err, res) {
       if (err) throw err;
       for (var i = 0; i < res.length; i++) {
         console.log(console.table(res));
@@ -115,19 +119,26 @@ function queryAllEmployees() {
           first_name: data.name,
           last_name: data.surname, 
         },
+        function(err, res) {
+          if (err) throw err;
+        }
+      );
+      var query2 = connection.query(
         "INSERT INTO role SET ?",
         {
           title: data.role
         },
         function(err, res) {
           if (err) throw err;
-          console.log(query.values);
         }
       );
+      console.log(query.values);
+      console.log(query2.values);
       console.log("New team member added.");
       startPrompt();
   });
 }
+
 
 // remove an employee from the roster
 function removeEmployee() {
@@ -150,11 +161,12 @@ function removeEmployee() {
     var query = connection.query(
         "DELETE FROM employee WHERE ?",
         {
-          last_name: data.surname
+          last_name: data.remove
         },
         function(err, res) {
           if (err) throw err;
-          console.log(query.values);
+          console.log(`${query.values} has been removed from the roster.`);
+          startPrompt();
           }
       );
     });
@@ -162,7 +174,7 @@ function removeEmployee() {
 }
 
 // update employee's data
-function updateEmployee (){
+function updateEmployeeRole(){
   connection.query("SELECT * FROM employee", function(err, results) {
   inquirer.prompt([
     {
@@ -175,28 +187,29 @@ function updateEmployee (){
             }
             return employeeArray;
           },
-        name: 'update',
-        
+        name: 'update'
     },
+    {
+      type: 'list',
+      message: 'What is the employee\'s new roll?',
+      choices: ["Sales Lead", "Sales Person", "Lead Engineer", "Software Engineer", "Accountant", "Legal Team Lead", "Lawyer"],
+      name: 'newRole'
+    }
   ]).then(data => {
     var query = connection.query(
-      "UPDATE employee SET ? WHERE ?",
+      "UPDATE role SET ? WHERE ?",
       [
         {
-         first_name: data.name,
-         last_name: data.surname
+          title: data.newRole
         },
-      ],
-
-        "UPDATE employee SET ? WHERE ?",
-      [
         {
-          title: role.title
+          title: data.newRole
         }
       ],
       function(error) {
         if (error) throw err;
-        console.log(query.values);
+        console.log('Employee\'s role has been updated.')
+        startPrompt();
         }
       );
     })
